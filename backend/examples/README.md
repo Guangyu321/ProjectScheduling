@@ -7,7 +7,7 @@
 
 模拟器不执行真实驱动，不打开 TCP、串口或厂商 SDK。工作流必须显式设置 `simulation_only: true`。
 
-运行：在项目根目录执行 `python -m lab_orchestrator.demo`，或使用 README 中的 `run_demo` 函数。输出包含控制器数据库、独立设备账本、JSON 记录和实际执行甘特图。
+运行：在 `backend/` 目录执行 `python -m lab_orchestrator.demo`，或使用 README 中的 `run_demo` 函数。输出包含控制器数据库、独立设备账本、JSON 记录和实际执行甘特图。
 
 第一版限制：每个数据库一个批次；每块板为有序线性依赖链；固定设备和目的板位；资源容量均为 1。分支/汇合、工艺时间窗、真实库存和设备参数模式校验按后续阶段实施。
 

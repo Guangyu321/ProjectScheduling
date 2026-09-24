@@ -16,6 +16,13 @@ def digest(value):
     return hashlib.sha256(encode(value).encode('utf-8')).hexdigest()
 
 
+class DatabaseInUseError(RuntimeError):
+    """The controller lock is held by another process or Store instance."""
+    def __init__(self,path):
+        self.path=Path(path)
+        super().__init__(f'Another controller owns this simulation database: {self.path}')
+
+
 class Store:
     def __init__(self,path):
         self.path=Path(path).resolve()
@@ -35,7 +42,7 @@ class Store:
                 fcntl.flock(self.lock.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
         except OSError as exc:
             self.lock.close(); self.lock=None
-            raise RuntimeError('Another controller owns this simulation database') from exc
+            raise DatabaseInUseError(self.path) from exc
         try:
             self.db=sqlite3.connect(self.path,isolation_level=None)
             self.db.row_factory=sqlite3.Row

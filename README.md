@@ -15,25 +15,78 @@
 - SQLite 持久化、旧数据库兼容迁移、服务重启后核实并暂停。
 - 驱动协议、显式注册表、持久化命令路由和每台设备独立模拟账本。
 
-## 启动操作台
+## 目录结构
 
-需要 Python 3.11+，运行时无需安装第三方库。在项目目录执行：
-
-```powershell
-python -m lab_orchestrator.server --port 8765 --data .runtime/console
+```text
+backend/                 后端，独立运行
+  run.py                 API 启动入口
+  lab_orchestrator/      调度、控制、驱动和 HTTP API
+  examples/              设备与流程配置
+  tests/                 后端测试
+frontend/                前端，独立运行
+  serve.py               本地静态服务与 API 地址配置
+  public/                HTML、CSS、JavaScript 和默认配置
+  tests/                 前端服务测试和浏览器验收
+.runtime/console/        已有运行数据，拆分后继续沿用
+docs/                    架构与接口文档
 ```
 
-浏览器打开 http://127.0.0.1:8765 ，点击“新建模拟批次”。默认每 0.3 秒推进 1 秒虚拟时间；页面每秒刷新。按 Ctrl+C 停止服务，下次使用同一数据目录启动即可恢复。
+## 启动前后端
 
-数据保存在 `.runtime/console/`：批次目录、控制器数据库、设备路由和模拟设备账本。历史页面显示摘要；当前批次可导出完整 JSON。系统同一时间运行一个批次，结束后可创建下一批次。
+需要 Python 3.11+，运行时无需安装第三方库。在项目根目录打开两个终端分别执行：
 
-验证覆盖 33 项自动化行为测试和浏览器完整操作流程。双板示例包含 24 个步骤；直接内核演示用时 49 秒虚拟时间。暂停、恢复及启动时机可能改变操作台的虚拟总时长，不能据此推断真实设备性能。
+后端（8765，仅提供 JSON API）：
 
-详细说明见 [操作台、HTTP API 与驱动接口](docs/05-console-and-drivers.md)。
+```powershell
+python backend/run.py
+```
+
+前端（5173）：
+
+```powershell
+python frontend/serve.py
+```
+
+浏览器打开 http://127.0.0.1:5173 ，点击“新建模拟批次”。前端通过 HTTP 连接后端，不导入后端代码。关闭前端不会停止后台调度；停止后端后，使用同一数据目录重启会核实并暂停当前批次。
+
+后端默认数据目录固定为项目根目录的 `.runtime/console/`，从根目录或 backend 目录启动均沿用原数据。历史页面显示摘要，当前批次可导出完整 JSON。默认每 0.3 秒推进 1 秒虚拟时间，前端每秒刷新。
+
+自定义端口时，同时指定前端使用的 API 和后端允许的前端来源：
+
+```powershell
+# 终端一
+python backend/run.py --port 8766 --frontend-origin http://127.0.0.1:5180
+# 终端二
+python frontend/serve.py --port 5180 --api-base http://127.0.0.1:8766
+```
+
+前端 `public/` 也可作为独立静态站点托管，修改 `config.js` 的 apiBase；后端必须允许对应前端来源。当前两端的本地服务均只监听 127.0.0.1。
+
+详见 [后端说明](backend/README.md)、[前端说明](frontend/README.md) 和 [操作台与驱动接口](docs/05-console-and-drivers.md)。
+
+## 重复启动提示
+
+每个服务只需在一个终端启动，并保持该终端打开。出现“运行数据正由另一个后台占用”表示已有控制器使用相同数据目录；使用已有服务，或在原终端按 Ctrl+C 停止后再启动。无需删除数据库或 .lock 文件，锁随进程退出自动释放。
+
+端口被占用时先停止对应服务，或按上面的示例同时修改前端地址和后端允许来源。独立后端实例必须同时使用不同的 `--data` 与 `--port`。
+
+## 验证
+
+从项目根目录执行：
+
+```powershell
+Push-Location backend
+python -m unittest discover -s tests -v
+Pop-Location
+python -m unittest discover -s frontend/tests -p test_frontend.py -v
+node --check frontend/public/app.js
+```
+
+本轮验证包含 39 项后端测试、4 项前端服务测试，以及真实跨端口浏览器完整操作。双板示例包含 24 步；直接内核演示用时 49 秒虚拟时间。暂停和恢复可能改变总时长，不能据此推断真实设备性能。
 
 ## 直接调用
 
-需要 Python 3.11+，无需安装第三方库。从当前项目目录运行，或将本项目目录加入调用方的 Python 模块路径。
+需要 Python 3.11+，无需安装第三方库。以下 Python 示例在 `backend/` 目录运行，或将该目录加入调用方的 Python 模块路径。
 
 ```python
 from lab_orchestrator import run_demo
@@ -46,6 +99,7 @@ print(report['positions'])
 也可使用便捷入口：
 
 ```powershell
+cd backend
 python -m lab_orchestrator.demo
 python -m unittest discover -s tests -v
 ```
@@ -91,7 +145,7 @@ finally:
 3. [设备与业务接口设计](docs/02-contracts.md)
 4. [数据、状态机与恢复设计](docs/03-state-and-recovery.md)
 5. [当前验收与后续阶段](docs/04-delivery.md)
-6. [模拟配置说明](examples/README.md)
+6. [模拟配置说明](backend/examples/README.md)
 7. [操作台与驱动接口](docs/05-console-and-drivers.md)
 8. [本轮实施计划](docs/superpowers/plans/2026-09-24-runtime-console.md)
 
