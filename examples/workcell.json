@@ -1,0 +1,358 @@
+{
+  "schema_version": 1,
+  "station_id": "sim_station_1",
+  "simulation_only": true,
+  "devices": [
+    {
+      "id": "robot_1",
+      "kind": "robot",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "plate.transport"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "liquid_handler_1",
+      "kind": "liquid_handler",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "liquid.transfer"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "sealer_1",
+      "kind": "sealer",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "plate.seal"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "peeler_1",
+      "kind": "peeler",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "plate.peel"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "shaker_1",
+      "kind": "shaker",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "plate.shake"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "fridge_1",
+      "kind": "fridge",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "storage.store",
+        "storage.retrieve"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "stack_1",
+      "kind": "stack",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "stack.present"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "reader_1",
+      "kind": "fluorometer",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "fluorescence.measure"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "centrifuge_1",
+      "kind": "centrifuge",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "plate.centrifuge"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "scanner_1",
+      "kind": "scanner",
+      "driver": "simulated",
+      "state": "idle",
+      "capabilities": [
+        "identity.scan"
+      ],
+      "plate_types": [
+        "SIM_96"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "robot_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "robot_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "liquid_handler_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "liquid_handler_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "sealer_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "sealer_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "peeler_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "peeler_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "shaker_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "shaker_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "fridge_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "fridge_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "stack_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "stack_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "reader_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "reader_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "centrifuge_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "centrifuge_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "scanner_1.processing",
+      "capacity": 1
+    },
+    {
+      "id": "scanner_1.port",
+      "capacity": 1
+    },
+    {
+      "id": "robot_1.gripper",
+      "capacity": 1
+    },
+    {
+      "id": "zone.main",
+      "capacity": 1
+    },
+    {
+      "id": "buffer.port",
+      "capacity": 1
+    }
+  ],
+  "locations": [
+    {
+      "id": "robot_1.slot1",
+      "device_id": "robot_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "liquid_handler_1.slot1",
+      "device_id": "liquid_handler_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "sealer_1.slot1",
+      "device_id": "sealer_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "peeler_1.slot1",
+      "device_id": "peeler_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "shaker_1.slot1",
+      "device_id": "shaker_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "fridge_1.slot1",
+      "device_id": "fridge_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "fridge_1.slot2",
+      "device_id": "fridge_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "stack_1.slot1",
+      "device_id": "stack_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "stack_1.slot2",
+      "device_id": "stack_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "reader_1.slot1",
+      "device_id": "reader_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "centrifuge_1.slot1",
+      "device_id": "centrifuge_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "centrifuge_1.slot2",
+      "device_id": "centrifuge_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "scanner_1.slot1",
+      "device_id": "scanner_1",
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    },
+    {
+      "id": "buffer.slot1",
+      "device_id": null,
+      "capacity": 1,
+      "plate_types": [
+        "SIM_96"
+      ]
+    }
+  ],
+  "transport": {
+    "robot_id": "robot_1",
+    "reachable_locations": [
+      "liquid_handler_1.slot1",
+      "sealer_1.slot1",
+      "peeler_1.slot1",
+      "shaker_1.slot1",
+      "fridge_1.slot1",
+      "fridge_1.slot2",
+      "stack_1.slot1",
+      "stack_1.slot2",
+      "reader_1.slot1",
+      "centrifuge_1.slot1",
+      "centrifuge_1.slot2",
+      "scanner_1.slot1",
+      "buffer.slot1"
+    ],
+    "shared_resources": [
+      "zone.main",
+      "robot_1.gripper"
+    ]
+  }
+}

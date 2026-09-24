@@ -1,0 +1,392 @@
+{
+  "schema_version": 1,
+  "definition_id": "sim_plate_pipeline",
+  "version": 1,
+  "simulation_only": true,
+  "plates": [
+    {
+      "id": "plate_01",
+      "barcode": "SIM001",
+      "type": "SIM_96",
+      "initial_location": "stack_1.slot1",
+      "final_location": "fridge_1.slot1"
+    },
+    {
+      "id": "plate_02",
+      "barcode": "SIM002",
+      "type": "SIM_96",
+      "initial_location": "stack_1.slot2",
+      "final_location": "fridge_1.slot2"
+    }
+  ],
+  "steps": [
+    {
+      "id": "plate_01.move_to_scan",
+      "plate_id": "plate_01",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "stack_1.slot1",
+      "target": "scanner_1.slot1",
+      "depends_on": [],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_01.scan",
+      "plate_id": "plate_01",
+      "kind": "process",
+      "capability": "identity.scan",
+      "device_id": "scanner_1",
+      "location": "scanner_1.slot1",
+      "depends_on": [
+        "plate_01.move_to_scan"
+      ],
+      "parameters": {
+        "expected_barcode": "SIM001"
+      },
+      "estimated_duration_s": 1,
+      "timeout_s": 11
+    },
+    {
+      "id": "plate_01.move_to_pipette",
+      "plate_id": "plate_01",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "scanner_1.slot1",
+      "target": "liquid_handler_1.slot1",
+      "depends_on": [
+        "plate_01.scan"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_01.pipette",
+      "plate_id": "plate_01",
+      "kind": "process",
+      "capability": "liquid.transfer",
+      "device_id": "liquid_handler_1",
+      "location": "liquid_handler_1.slot1",
+      "depends_on": [
+        "plate_01.move_to_pipette"
+      ],
+      "parameters": {
+        "method_id": "SIM_PIPETTE_V1"
+      },
+      "estimated_duration_s": 8,
+      "timeout_s": 18
+    },
+    {
+      "id": "plate_01.move_to_seal",
+      "plate_id": "plate_01",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "liquid_handler_1.slot1",
+      "target": "sealer_1.slot1",
+      "depends_on": [
+        "plate_01.pipette"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_01.seal",
+      "plate_id": "plate_01",
+      "kind": "process",
+      "capability": "plate.seal",
+      "device_id": "sealer_1",
+      "location": "sealer_1.slot1",
+      "depends_on": [
+        "plate_01.move_to_seal"
+      ],
+      "parameters": {
+        "method_id": "SIM_SEAL_V1"
+      },
+      "estimated_duration_s": 4,
+      "timeout_s": 14
+    },
+    {
+      "id": "plate_01.move_to_shake",
+      "plate_id": "plate_01",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "sealer_1.slot1",
+      "target": "shaker_1.slot1",
+      "depends_on": [
+        "plate_01.seal"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_01.shake",
+      "plate_id": "plate_01",
+      "kind": "process",
+      "capability": "plate.shake",
+      "device_id": "shaker_1",
+      "location": "shaker_1.slot1",
+      "depends_on": [
+        "plate_01.move_to_shake"
+      ],
+      "parameters": {
+        "method_id": "SIM_SHAKE_V1"
+      },
+      "estimated_duration_s": 6,
+      "timeout_s": 16
+    },
+    {
+      "id": "plate_01.move_to_measure",
+      "plate_id": "plate_01",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "shaker_1.slot1",
+      "target": "reader_1.slot1",
+      "depends_on": [
+        "plate_01.shake"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_01.measure",
+      "plate_id": "plate_01",
+      "kind": "process",
+      "capability": "fluorescence.measure",
+      "device_id": "reader_1",
+      "location": "reader_1.slot1",
+      "depends_on": [
+        "plate_01.move_to_measure"
+      ],
+      "parameters": {
+        "method_id": "SIM_MEASURE_V1"
+      },
+      "estimated_duration_s": 5,
+      "timeout_s": 15
+    },
+    {
+      "id": "plate_01.move_to_store",
+      "plate_id": "plate_01",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "reader_1.slot1",
+      "target": "fridge_1.slot1",
+      "depends_on": [
+        "plate_01.measure"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_01.store",
+      "plate_id": "plate_01",
+      "kind": "process",
+      "capability": "storage.store",
+      "device_id": "fridge_1",
+      "location": "fridge_1.slot1",
+      "depends_on": [
+        "plate_01.move_to_store"
+      ],
+      "parameters": {
+        "method_id": "SIM_STORE_V1"
+      },
+      "estimated_duration_s": 1,
+      "timeout_s": 11
+    },
+    {
+      "id": "plate_02.move_to_scan",
+      "plate_id": "plate_02",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "stack_1.slot2",
+      "target": "scanner_1.slot1",
+      "depends_on": [],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_02.scan",
+      "plate_id": "plate_02",
+      "kind": "process",
+      "capability": "identity.scan",
+      "device_id": "scanner_1",
+      "location": "scanner_1.slot1",
+      "depends_on": [
+        "plate_02.move_to_scan"
+      ],
+      "parameters": {
+        "expected_barcode": "SIM002"
+      },
+      "estimated_duration_s": 1,
+      "timeout_s": 11
+    },
+    {
+      "id": "plate_02.move_to_pipette",
+      "plate_id": "plate_02",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "scanner_1.slot1",
+      "target": "liquid_handler_1.slot1",
+      "depends_on": [
+        "plate_02.scan"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_02.pipette",
+      "plate_id": "plate_02",
+      "kind": "process",
+      "capability": "liquid.transfer",
+      "device_id": "liquid_handler_1",
+      "location": "liquid_handler_1.slot1",
+      "depends_on": [
+        "plate_02.move_to_pipette"
+      ],
+      "parameters": {
+        "method_id": "SIM_PIPETTE_V1"
+      },
+      "estimated_duration_s": 8,
+      "timeout_s": 18
+    },
+    {
+      "id": "plate_02.move_to_seal",
+      "plate_id": "plate_02",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "liquid_handler_1.slot1",
+      "target": "sealer_1.slot1",
+      "depends_on": [
+        "plate_02.pipette"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_02.seal",
+      "plate_id": "plate_02",
+      "kind": "process",
+      "capability": "plate.seal",
+      "device_id": "sealer_1",
+      "location": "sealer_1.slot1",
+      "depends_on": [
+        "plate_02.move_to_seal"
+      ],
+      "parameters": {
+        "method_id": "SIM_SEAL_V1"
+      },
+      "estimated_duration_s": 4,
+      "timeout_s": 14
+    },
+    {
+      "id": "plate_02.move_to_shake",
+      "plate_id": "plate_02",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "sealer_1.slot1",
+      "target": "shaker_1.slot1",
+      "depends_on": [
+        "plate_02.seal"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_02.shake",
+      "plate_id": "plate_02",
+      "kind": "process",
+      "capability": "plate.shake",
+      "device_id": "shaker_1",
+      "location": "shaker_1.slot1",
+      "depends_on": [
+        "plate_02.move_to_shake"
+      ],
+      "parameters": {
+        "method_id": "SIM_SHAKE_V1"
+      },
+      "estimated_duration_s": 6,
+      "timeout_s": 16
+    },
+    {
+      "id": "plate_02.move_to_measure",
+      "plate_id": "plate_02",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "shaker_1.slot1",
+      "target": "reader_1.slot1",
+      "depends_on": [
+        "plate_02.shake"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_02.measure",
+      "plate_id": "plate_02",
+      "kind": "process",
+      "capability": "fluorescence.measure",
+      "device_id": "reader_1",
+      "location": "reader_1.slot1",
+      "depends_on": [
+        "plate_02.move_to_measure"
+      ],
+      "parameters": {
+        "method_id": "SIM_MEASURE_V1"
+      },
+      "estimated_duration_s": 5,
+      "timeout_s": 15
+    },
+    {
+      "id": "plate_02.move_to_store",
+      "plate_id": "plate_02",
+      "kind": "transport",
+      "capability": "plate.transport",
+      "device_id": "robot_1",
+      "source": "reader_1.slot1",
+      "target": "fridge_1.slot2",
+      "depends_on": [
+        "plate_02.measure"
+      ],
+      "parameters": {},
+      "estimated_duration_s": 2,
+      "timeout_s": 10
+    },
+    {
+      "id": "plate_02.store",
+      "plate_id": "plate_02",
+      "kind": "process",
+      "capability": "storage.store",
+      "device_id": "fridge_1",
+      "location": "fridge_1.slot2",
+      "depends_on": [
+        "plate_02.move_to_store"
+      ],
+      "parameters": {
+        "method_id": "SIM_STORE_V1"
+      },
+      "estimated_duration_s": 1,
+      "timeout_s": 11
+    }
+  ]
+}
