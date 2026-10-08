@@ -4,3 +4,5 @@ __pycache__/
 .test-runtime/
 tests/*
 docs/*
+venv/*
+.venv/
