@@ -145,6 +145,8 @@ def create_server(service, port=8765, frontend_origins=None):
                     return self.send(200, service.call("history"))
                 if path == "/api/v1/drivers":
                     return self.send(200, service.call("drivers"))
+                if path == "/api/v1/recipes":
+                    return self.send(200, service.call("recipes"))
                 self.send(404, {"error": "Not found"})
             except Exception as exc:
                 self.send(500, {"error": str(exc)})
@@ -177,9 +179,17 @@ def create_server(service, port=8765, frontend_origins=None):
                     raise ValueError("Body must be a JSON object")
                 parts = [unquote(p) for p in urlsplit(self.path).path.split("/") if p]
                 if parts == ["api", "v1", "runs"]:
-                    if set(payload) - {"actor", "key", "scenario", "workflow"}:
+                    if set(payload) - {"actor", "key", "scenario", "workflow", "recipe"}:
                         raise ValueError("Unsupported submission fields")
                     return self.send(201, service.call("create", **payload))
+                if parts == ["api", "v1", "recipes", "preview"]:
+                    if set(payload) != {"recipe"}:
+                        raise ValueError("Preview requires only recipe")
+                    return self.send(200, service.call("preview_recipe", **payload))
+                if parts == ["api", "v1", "recipes"]:
+                    if set(payload) != {"recipe", "actor", "expected_version"}:
+                        raise ValueError("Save requires recipe, actor and expected_version")
+                    return self.send(201, service.call("save_recipe", **payload))
                 if type(payload.get("expected_version")) is not int:
                     raise ValueError("expected_version is required")
                 if (

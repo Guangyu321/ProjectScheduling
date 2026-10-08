@@ -130,7 +130,8 @@ class CoreTests(unittest.TestCase):
 
     def test_configuration_rejects_invalid_inputs(self):
         cases=[]
-        flow=copy.deepcopy(self.flow); flow['steps'][0]['depends_on']=[flow['steps'][-1]['id']]; cases.append((self.cell,flow))
+        # A dependency on the other plate is now valid; this is a real same-plate cycle.
+        flow=copy.deepcopy(self.flow); flow['steps'][0]['depends_on']=['plate_01.store']; cases.append((self.cell,flow))
         flow=copy.deepcopy(self.flow); flow['plates'][1]['initial_location']=flow['plates'][0]['initial_location']; cases.append((self.cell,flow))
         flow=copy.deepcopy(self.flow); flow['steps'][0]['device_id']='missing'; cases.append((self.cell,flow))
         flow=copy.deepcopy(self.flow); flow['steps'][0]['estimated_duration_s']=math.nan; cases.append((self.cell,flow))

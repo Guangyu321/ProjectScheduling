@@ -22,13 +22,14 @@ python run.py --port 8766 --frontend-origin http://127.0.0.1:5180
 
 ## 代码
 
+- `lab_orchestrator/recipes.py`：配方编译、能力匹配、自动转运和隔离预演。
 - `lab_orchestrator/engine.py`：调度与命令核实。
 - `lab_orchestrator/controls.py`：暂停、继续、取消和人工恢复。
 - `lab_orchestrator/drivers.py`：协议、注册表和设备路由。
 - `lab_orchestrator/service.py`：单写入线程与批次管理。
 - `lab_orchestrator/server.py`：JSON API、来源校验和 CORS。
 - `examples/`：10 类模拟设备与双板流程。
-- `tests/`：39 项后端行为测试。
+- `tests/`：后端行为测试（含自由编排与模板恢复）。
 
 ## 测试和直接调用
 

@@ -89,6 +89,8 @@ def create_server(port=5173, api_base=DEFAULT_API):
                 "/": ("index.html", "text/html; charset=utf-8"),
                 "/index.html": ("index.html", "text/html; charset=utf-8"),
                 "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+                "/composer.js": ("composer.js", "text/javascript; charset=utf-8"),
+                "/composer.css": ("composer.css", "text/css; charset=utf-8"),
                 "/style.css": ("style.css", "text/css; charset=utf-8"),
             }
             if path not in files:

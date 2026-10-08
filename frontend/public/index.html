@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>LabFlow · 实验室运行台</title>
     <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/composer.css">
     <script defer src="/config.js"></script>
+    <script defer src="/composer.js"></script>
     <script defer src="/app.js"></script>
 </head>
 
@@ -16,7 +18,7 @@
             <div>LabFlow<small>实验室运行台</small></div>
         </div>
         <p class="nav-label">工作站</p>
-        <nav aria-label="主导航"><button data-view="overview" class="nav active">运行总览</button><button data-view="devices"
+        <nav aria-label="主导航"><button data-view="overview" class="nav active">运行总览</button><button data-view="composer" class="nav">流程编排</button><button data-view="devices"
                 class="nav">设备与板位</button><button data-view="recovery" class="nav">报警与恢复 <span
                     id="nav-alarm">0</span></button><button data-view="events" class="nav">执行日志</button><button
                 data-view="history" class="nav">批次历史</button></nav>
@@ -50,7 +52,7 @@
             <div class="card run-card">
                 <div>
                     <h2>运行控制 <span id="run-badge" class="badge">未开始</span></h2>
-                    <p id="run-hint" class="muted">创建一条双板流程，开始观察设备协作。</p>
+                    <p id="run-hint" class="muted">选择流程模板，或先到流程编排自由组合实验步骤。</p>
                 </div>
                 <div class="actions"><button id="pause" disabled>暂停</button><button id="resume"
                         disabled>继续运行</button><button id="recheck" disabled>重新核实</button><button id="cancel"
@@ -62,8 +64,7 @@
                         <h2>执行时间线</h2>
                         <p class="muted">虚拟时间 · 悬停查看步骤与命令状态</p>
                     </div>
-                    <div class="legend"><span class="p1">板 01</span><span class="p2">板 02</span><span
-                            class="uncertain">待核实</span></div>
+                    <div class="legend" id="plate-legend"></div>
                 </div>
                 <div id="timeline" class="timeline">
                     <div class="empty">尚无执行记录</div>
@@ -79,6 +80,20 @@
                     <div id="recent-events"></div>
                 </div>
             </div>
+        </section>
+        <section class="view" id="view-composer" hidden>
+            <div class="card">
+                <div class="card-title"><div><h2>自由组合实验流程</h2><p class="muted">从操作库添加步骤，调整顺序；机械臂转运由系统自动补齐。</p></div><span id="recipe-status" class="badge quiet">草稿</span></div>
+                <div class="recipe-toolbar"><label>已保存模板<select id="recipe-template" aria-label="已保存模板"></select></label><button id="load-recipe">加载模板</button><button id="blank-recipe">新建空白流程</button><button id="import-recipe">导入 JSON</button><button id="export-recipe">导出 JSON</button><input type="file" id="recipe-file" accept=".json,application/json" hidden></div>
+                <div class="recipe-settings"><label>流程名称<input id="recipe-name" maxlength="100" placeholder="例如：样品复测流程"></label><label>多板执行方式<select id="execution-mode"><option value="serial">逐板执行 · 适合往返和重复操作</option><option value="parallel">交错执行 · 设备空闲时推进其他板</option></select></label></div>
+                <p class="form-note">模板修改用于新批次。当前运行批次保留创建时的流程版本。</p>
+            </div>
+            <div class="composer-layout">
+                <aside class="card operation-library"><h2>操作库</h2><p class="muted">点击添加，可重复使用。</p><div id="operation-library"></div><p class="form-note">设备在运行前按能力匹配，也可逐步指定。离心仅模拟动作，不包含配平校验。</p></aside>
+                <div class="card operation-workspace"><div class="card-title"><h2>实验步骤 <span id="operation-count" class="badge quiet">0</span></h2><span class="muted">使用 ↑ ↓ 调整顺序</span></div><div id="recipe-steps"></div></div>
+            </div>
+            <div class="card"><div class="card-title"><div><h2>样品板与起止位置</h2><p class="muted">每块板执行上方步骤；条码和最终位置需独立。</p></div><button id="add-plate">＋ 添加样品板</button></div><div id="recipe-plates"></div></div>
+            <div class="card"><div class="card-title"><div><h2>运行前预演</h2><p class="muted">检查能力匹配、板位路线和资源阻塞，查看预计时间线。</p></div><div class="actions"><button id="preview-recipe">预演流程</button><button id="save-recipe" class="primary">保存模板</button><button id="save-recipe-as">另存为新模板</button><button id="run-recipe">用此流程新建批次</button></div></div><p id="preview-status" role="status" class="muted">编辑完成后，先预演检查流程。</p><div id="recipe-preview"></div><p class="form-note">时间线为软件模拟估计，不代表真实设备性能；不验证实验方法、膜状态或耗材余量。</p></div>
         </section>
         <section class="view" id="view-devices" hidden>
             <div class="section-heading">
@@ -131,7 +146,7 @@
                             <tr>
                                 <th>批次</th>
                                 <th>创建时间</th>
-                                <th>场景</th>
+                                <th>流程 / 场景</th>
                                 <th>状态</th>
                                 <th>完成步骤</th>
                                 <th>虚拟时间</th>
@@ -147,10 +162,10 @@
     <dialog id="new-dialog">
         <form id="new-form">
             <h2>新建模拟批次</h2>
-            <p class="muted">双板流程：扫码 → 移液 → 封膜 → 振荡 → 检测 → 入库。</p><label>运行场景<select id="scenario">
-                    <option value="normal">正常双板流程</option>
-                    <option value="lost_ack">移液回执丢失 · 自动查询后继续</option>
-                    <option value="unknown">搬运结果未知 · 进入人工恢复</option>
+            <label>实验流程<select id="run-template"></select></label><p id="new-summary" class="muted"></p><label>运行场景<select id="scenario">
+                    <option value="normal">正常执行</option>
+                    <option value="lost_ack">步骤回执丢失 · 自动查询后继续</option>
+                    <option value="unknown">动作结果未知 · 进入人工恢复</option>
                 </select></label>
             <p class="form-note">使用独立运行目录保存记录，不覆盖已有批次。</p>
             <div class="dialog-actions"><button type="button" data-close="new-dialog">返回</button><button class="primary"

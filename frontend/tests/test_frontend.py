@@ -34,8 +34,11 @@ class FrontendTests(unittest.TestCase):
             script=response.read().decode()
             config=json.loads(script.removeprefix('window.LAB_CONFIG = ').strip().removesuffix(';'))
             self.assertEqual(config['apiBase'],self.api)
-        with urlopen(self.base+'/app.js') as response:
-            self.assertIn('API_BASE+path',response.read().decode())
+        for asset,mime in (('/app.js','text/javascript'),('/composer.js','text/javascript'),('/composer.css','text/css')):
+            with self.subTest(asset=asset), urlopen(self.base+asset) as response:
+                self.assertEqual(response.status,200)
+                self.assertIn(mime,response.headers['Content-Type'])
+                self.assertTrue(response.read())
 
     def test_frontend_does_not_expose_api_or_server_files(self):
         for path in ('/api/v1/state','/serve.py','/../serve.py','/%2e%2e/serve.py','/tests/test_frontend.py'):

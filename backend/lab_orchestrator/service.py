@@ -1,6 +1,7 @@
 """A single owning thread serializes all HTTP/user and scheduler operations."""
 from concurrent.futures import Future
 from datetime import datetime,timezone
+import copy
 import json
 from pathlib import Path
 from queue import Queue,Empty
@@ -12,6 +13,7 @@ from .drivers import DeviceRouter,default_registry
 from .engine import Engine
 from .storage import Store,digest,encode
 from .validation import validate
+from .recipes import operation_catalog,default_recipe,preview_recipe
 
 ROOT=Path(__file__).resolve().parents[1]
 SCENARIOS={'normal':{},'lost_ack':{'plate_01.pipette':'lost_ack'},'unknown':{'plate_01.move_to_scan':'unknown'}}
@@ -85,7 +87,7 @@ class PanelService:
 
     def _open(self,record):
         path=self.directory/'batches'/record['session_id']
-        router=DeviceRouter(self.cell,path/'devices',self.registry,faults=SCENARIOS[record['scenario']])
+        router=DeviceRouter(self.cell,path/'devices',self.registry,faults=record.get('faults',SCENARIOS[record['scenario']]))
         try:engine=Engine(self.cell,path/'runtime.sqlite',router)
         except BaseException:router.close();raise
         self.router=router;self.engine=engine
@@ -115,12 +117,44 @@ class PanelService:
                      mode='simulation',workflow=self.flow if not self.engine else json.loads(self.engine.store.db.execute('SELECT body FROM runs').fetchone()[0]))
         return state
 
+    def _recipes(self):
+        return [{'recipe':default_recipe(self.cell,self.flow),'builtin':True}]+self.panel.meta('recipes',[])
+
+    def _save_recipe(self,payload):
+        actor=payload.get('actor');expected=payload.get('expected_version');recipe=copy.deepcopy(payload.get('recipe'))
+        if not isinstance(actor,str) or not actor.strip() or len(actor)>100:raise ValueError('Operator name is required')
+        if type(expected) is not int or expected<0:raise ValueError('Template expected_version must be a non-negative integer')
+        if not isinstance(recipe,dict) or not isinstance(recipe.get('id'),str):raise ValueError('流程标识必填')
+        if recipe['id'].startswith('builtin_'):raise ValueError('内置流程请另存为新模板')
+        records=self.panel.meta('recipes',[])
+        version=max((r['recipe']['version'] for r in records if r['recipe']['id']==recipe['id']),default=0)
+        if expected!=version:raise ConflictError('模板已更新，请重新加载最新版本，或另存为新模板')
+        recipe['version']=version+1
+        preview_recipe(self.cell,recipe)
+        record={'recipe':recipe,'builtin':False,'actor':actor,'saved_at':datetime.now(timezone.utc).isoformat()}
+        with self.panel.transaction():
+            self.panel.set_meta('recipes',records+[record])
+        return record
+
+    @staticmethod
+    def _faults(scenario,workflow):
+        if scenario=='normal':return {}
+        steps=workflow['steps']
+        if scenario=='lost_ack':
+            candidates=[s for s in steps if s['capability']=='liquid.transfer'] or [s for s in steps if s['kind']=='process']
+        else:
+            candidates=[s for s in steps if s['kind']=='transport']
+        target=(candidates or steps)[0]
+        return {target['id']:scenario}
+
     def _create(self,payload):
         actor=payload.get('actor');key=payload.get('key');scenario=payload.get('scenario','normal')
         if not isinstance(actor,str) or not actor.strip() or len(actor)>100:raise ValueError('Operator name is required')
         if not isinstance(key,str) or not key.strip() or len(key)>200:raise ValueError('Submission key is required')
         if scenario not in SCENARIOS:raise ValueError('Unknown simulation scenario')
-        workflow=payload.get('workflow',self.flow);validate(self.cell,workflow)
+        if 'recipe' in payload and 'workflow' in payload:raise ValueError('recipe 与 workflow 只能提交一个')
+        workflow=preview_recipe(self.cell,payload['recipe'])['workflow'] if 'recipe' in payload else payload.get('workflow',self.flow)
+        validate(self.cell,workflow)
         request_hash=digest({'scenario':scenario,'workflow':workflow})
         catalog=self.panel.meta('catalog',[])
         prior=next((r for r in catalog if r['key']==key),None)
@@ -133,13 +167,16 @@ class PanelService:
             if old['state'] not in ('succeeded','cancelled') or old['locks']:
                 raise ConflictError('Finish or reconcile the current batch before starting another')
         session_id=uuid4().hex;path=self.directory/'batches'/session_id
-        router=DeviceRouter(self.cell,path/'devices',self.registry,faults=SCENARIOS[scenario])
+        faults=self._faults(scenario,workflow)
+        router=DeviceRouter(self.cell,path/'devices',self.registry,faults=faults)
         engine=None
         try:
             engine=Engine(self.cell,path/'runtime.sqlite',router)
             run_id=engine.submit(workflow,key)
             with engine.store.transaction():engine.store.event(engine.now,'operator_submitted',run_id,{'actor':actor,'scenario':scenario})
             record={'session_id':session_id,'run_id':run_id,'key':key,'request_hash':request_hash,'scenario':scenario,
+                    'faults':faults,'workflow_name':workflow.get('name',workflow['definition_id']),
+                    'workflow_version':workflow['version'],
                     'created_at':datetime.now(timezone.utc).isoformat()}
             with self.panel.transaction():
                 self.panel.set_meta('catalog',catalog+[record]);self.panel.set_meta('current',record)
@@ -153,7 +190,11 @@ class PanelService:
         return self._state()
 
     def _dispatch(self,action,payload):
-        if action=='bootstrap':return {'workcell':self.cell,'workflow':self.flow,'driver_keys':self.registry.keys(),'mode':'simulation'}
+        if action=='bootstrap':return {'workcell':self.cell,'workflow':self.flow,'driver_keys':self.registry.keys(),'mode':'simulation',
+                                       'operation_catalog':operation_catalog(self.cell),'default_recipe':default_recipe(self.cell,self.flow)}
+        if action=='recipes':return self._recipes()
+        if action=='save_recipe':return self._save_recipe(payload)
+        if action=='preview_recipe':return preview_recipe(self.cell,payload.get('recipe'))
         if action=='state':return self._state()
         if action=='history':
             self._save_summary()

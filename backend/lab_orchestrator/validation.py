@@ -1,5 +1,6 @@
-"""Configuration validation for fixed-route, capacity-one simulation."""
+"""Dependency and physical-route validation for capacity-one simulation."""
 import math
+from collections import deque
 
 
 def require(condition, message):
@@ -37,6 +38,27 @@ def resources_for(cell,step):
         else:
             resources.add('buffer.port')
     return sorted(resources)
+
+
+def dependency_order(steps):
+    """Topological order plus ancestors; never use JSON array order as execution order."""
+    children={key:[] for key in steps}; degree={}; ancestors={key:set() for key in steps}
+    for key,step in steps.items():
+        deps=step.get('depends_on')
+        require(isinstance(deps,list) and all(isinstance(d,str) for d in deps), 'Dependencies must be step ids')
+        require(len(deps)==len(set(deps)), 'Duplicate dependency')
+        require(all(d in steps and d!=key for d in deps), 'Unknown or self dependency')
+        degree[key]=len(deps)
+        for dep in deps:children[dep].append(key)
+    ready=deque(key for key in steps if not degree[key]); ordered=[]
+    while ready:
+        key=ready.popleft(); ordered.append(steps[key])
+        for child in children[key]:
+            ancestors[child].update(ancestors[key]); ancestors[child].add(key)
+            degree[child]-=1
+            if not degree[child]:ready.append(child)
+    require(len(ordered)==len(steps), 'Workflow dependency cycle')
+    return ordered,ancestors
 
 
 def validate(cell,flow):
@@ -82,15 +104,17 @@ def _validate(cell,flow):
             require(plate['type'] in locations[plate[key]]['plate_types'], 'Unsupported plate at location')
         require(plate['initial_location'] not in occupied, 'Initial location already occupied')
         occupied.add(plate['initial_location'])
+    require(len({p['final_location'] for p in plates.values()})==len(plates), 'Final locations must be distinct')
+    ordered,ancestors=dependency_order(steps)
     last={}; current={p:plate['initial_location'] for p,plate in plates.items()}
-    for step in steps.values():
+    for step in ordered:
         plate_id=step['plate_id']; device_id=step['device_id']
         require(plate_id in plates and device_id in devices, 'Unknown plate/device')
         require(step['kind'] in ('transport','process'), 'Unsupported step kind')
         require(step['capability'] in devices[device_id]['capabilities'], 'Capability mismatch')
         require(plates[plate_id]['type'] in devices[device_id]['plate_types'], 'Device plate type mismatch')
-        expected=[] if plate_id not in last else [last[plate_id]]
-        require(step['depends_on']==expected, 'Expected an ordered linear per-plate dependency chain')
+        require(plate_id not in last or last[plate_id] in ancestors[step['id']],
+                'Operations on the same plate must be ordered by dependencies')
         for field in ('estimated_duration_s','timeout_s'):
             n=step[field]
             require(type(n) in (int,float) and math.isfinite(n) and n>0, 'Duration must be positive and finite')

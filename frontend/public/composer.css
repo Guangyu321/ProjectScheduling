@@ -1,0 +1,28 @@
+.recipe-toolbar,.recipe-settings{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-top:18px}
+.recipe-toolbar label,.recipe-settings label,.operation-fields label,.plate-fields label{display:grid;gap:6px;min-width:0;font-size:12px;color:var(--muted)}
+.recipe-toolbar label{flex:1;min-width:200px}.recipe-settings label{flex:1;min-width:220px}
+.recipe-toolbar select,.recipe-settings input,.recipe-settings select,.operation-fields input,.operation-fields select,.plate-fields input,.plate-fields select{width:100%;min-width:0;box-sizing:border-box}
+.composer-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:start}
+.operation-library{position:sticky;top:15px}.operation-library h2{margin-bottom:8px}
+#operation-library{display:grid;gap:8px;margin:18px 0}
+#operation-library button{text-align:left;display:flex;justify-content:space-between;align-items:center;padding:11px 12px}
+#operation-library button::after{content:'＋';font-size:17px;color:#268d86}
+.operation-workspace{min-width:0}.operation-card{position:relative;padding:16px;border:1px solid var(--line);border-radius:9px;background:#fcfefe;margin:14px 0 25px}
+.operation-card:not(:last-child)::after{content:'↓';position:absolute;bottom:-23px;left:23px;color:#96b2b5;font-size:18px}
+.operation-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.operation-head h3{font-size:14px;margin:0;display:flex;align-items:center;gap:10px}
+.step-number{display:inline-grid;place-items:center;border-radius:7px;background:#e3f0ee;color:#246f69;width:27px;height:27px;font-size:12px}
+.step-actions{display:flex;gap:5px}.step-actions button{padding:5px 8px;font-size:12px}
+.operation-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.operation-fields .method-field{grid-column:1/-1}.operation-fields .method-field small{color:#8c9ba5;font-size:10px;overflow-wrap:anywhere}
+.plate-editor{border:1px solid var(--line);border-radius:8px;padding:15px;margin-top:14px}
+.plate-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.plate-editor .operation-head{margin-bottom:10px}
+#preview-status{overflow-wrap:anywhere;line-height:1.7}#preview-status.error{color:#a25031}#preview-status.success{color:#23796f}
+.preview-timeline{margin:20px 0;min-width:0}.preview-timeline .lane-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preview-timeline .bar{min-width:3px}.preview-route{margin-top:18px}.preview-route summary{cursor:pointer;color:#287a73;font-size:13px}
+.preview-route td{font-size:12px}.preview-route .table-scroll{margin-top:12px}
+#recipe-status{white-space:normal;text-align:right;line-height:1.5}.legend{flex-wrap:wrap}
+#view-composer>.card>.card-title{flex-wrap:wrap;gap:15px}
+@media(max-width:1100px){.composer-layout{grid-template-columns:190px minmax(0,1fr);gap:14px}.plate-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.recipe-toolbar{align-items:stretch}.recipe-toolbar label{width:100%}.step-actions{margin-left:auto}}
+@media(max-width:760px){.composer-layout{grid-template-columns:1fr;gap:0}.operation-library{position:static}#operation-library{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}#operation-library button{font-size:12px;padding:9px}.operation-fields,.plate-fields{grid-template-columns:1fr}.operation-fields .method-field{grid-column:auto}.recipe-settings{display:grid;grid-template-columns:1fr}.recipe-settings label{min-width:0}.recipe-toolbar label{min-width:0;flex-basis:100%}.recipe-toolbar button{font-size:12px;flex:1 0 40%}.operation-head{align-items:flex-start}.operation-card{padding:12px}.operation-workspace>.card-title{flex-wrap:wrap;gap:8px}.step-actions{flex-wrap:wrap}.preview-timeline .lane{grid-template-columns:85px minmax(0,1fr)}.preview-timeline .time-axis{grid-template-columns:85px minmax(0,1fr)}.preview-timeline .lane-label{font-size:10px}.recipe-toolbar select{max-width:100%}#view-composer .actions button{flex:1 1 40%;font-size:12px}#view-composer .card-title>div{min-width:0}}

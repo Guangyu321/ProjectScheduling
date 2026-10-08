@@ -29,6 +29,7 @@ python serve.py --port 5180 --api-base http://127.0.0.1:8766
 - `index.html`：页面结构。
 - `style.css`：页面样式。
 - `app.js`：视图、操作表单与 API 调用。
+- `composer.js` / `composer.css`：流程操作库、步骤编排、模板保存与预演。
 - `config.js`：默认 `window.LAB_CONFIG.apiBase`。
 
 使用本地 `serve.py` 时，`/config.js` 由 `--api-base` 生成，覆盖静态配置；直接静态托管 `public/` 时修改配置文件即可。两种方式都无需重新构建。静态服务器只应发布 public 目录，后端需要允许实际前端 origin。当前后端仍仅提供本机模拟控制。
@@ -42,6 +43,7 @@ python serve.py --port 5180 --api-base http://127.0.0.1:8766
 ```powershell
 python -m unittest discover -s tests -p test_frontend.py -v
 node --check public/app.js
+node --check public/composer.js
 ```
 
 完整浏览器验收需要额外提供 Playwright 和 Chrome，应用运行不依赖它们。两端服务启动且当前批次为空闲或终态后执行：
@@ -55,3 +57,7 @@ node tests/browser-smoke.cjs
 协议说明见 [操作台与驱动接口](../docs/05-console-and-drivers.md)。
 
 Windows 下前端端口采用独占监听；重复启动会提示端口冲突并退出，已有前端继续提供页面。停止原终端中的服务后即可重新启动。
+
+## 自由编排验收
+
+`node tests/browser-flexible.cjs` 自动启动隔离的前后端并使用独立数据目录，验证自由组合、重复与调序、预演、版本保存、运行控制及移动布局。使用 `PYTHON` 环境变量指定 Python，可用 `RUN_LEGACY_SMOKE=1` 同时执行原有浏览器恢复验收。运行说明见 [自由组合实验流程](../docs/06-flexible-workflows.md)。
